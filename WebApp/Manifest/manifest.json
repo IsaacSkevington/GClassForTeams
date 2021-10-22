@@ -1,0 +1,41 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.5/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.3",
+  "version": "1.0.0",
+  "id": "00000000-0000-0000-0000-000000000000",
+  "packageName": "com.iscl.ClassroomTeamsLinker",
+  "developer": {
+    "name": "IS Code Labs",
+    "websiteUrl": "https://github.com/IsaacSkevington/GClassForTeams",
+    "privacyUrl": "https://github.com/IsaacSkevington/GClassForTeams",
+    "termsOfUseUrl": "https://github.com/IsaacSkevington/GClassForTeams"
+  },
+  "name": {
+    "short": "GClass for teams",
+    "full": "Google Classroom for teams"
+  },
+  "description": {
+    "short": "Integration of Google classroom with teams",
+    "full": "Allows you to view Google Classroom assignments and submit work, right from Teams"
+  },
+  "icons": {
+    "outline": "bwicon.png",
+    "color": "colouricon.png"
+  },
+  "accentColor": "#60A18E",
+  "staticTabs": [
+    {
+      "entityId": "com.iscl.ClassroomTeamsLinker.home",
+      "name": "Home",
+      "contentUrl": "http://c3f8a425c5f4.ngrok.io",
+      "scopes": [
+        "personal"
+      ]
+    }
+  ],
+  "configurableTabs": [],
+  "bots": [],
+  "composeExtensions": [],
+  "permissions": [],
+  "validDomains": []
+}

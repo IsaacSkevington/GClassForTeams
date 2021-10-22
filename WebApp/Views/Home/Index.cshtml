@@ -1,0 +1,1186 @@
+﻿@using Google.Apis.Auth.OAuth2;
+@using Google.Apis.Classroom.v1;
+@using Google.Apis.Classroom.v1.Data;
+@using Google.Apis.Services;
+@using Google.Apis.Util.Store;
+@using System.Collections.Generic;
+@using System.IO;
+@using System.Threading;
+@using System.Configuration;
+@using iscl.gclassforteams.Web.Controllers
+@using Microsoft.AspNetCore.Http;
+@using System.Web;
+@using System;
+@using System.Linq;
+@using System.Threading.Tasks;
+@using Microsoft.AspNetCore.Mvc;
+@using Google.Apis.Auth.AspNetCore3;
+@using Microsoft.AspNetCore.Authorization;
+@using Google.Apis.Drive.v3;
+
+
+
+@model CourseData
+
+<style>
+
+    ul.menubar {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    li.menubar {
+        float: left;
+        background: white;
+        margin: 4px 2px;
+    }
+
+        li.menubar a {
+            display: inline-block;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Segoe UI', Tahoma, Helvetica, Sans-Serif;
+            text-align: center;
+            text-decoration: none;
+            background: #5558AF;
+            color: #FFFFFF;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            transition-duration: 0.5s;
+        }
+
+            li.menubar a:hover {
+                background-color: #9FA4FE !important;
+                color: #404045 !important;
+                transition-duration: 0.5s !important;
+            }
+
+    li.addbutton {
+        float: left;
+        background: white;
+        margin: 4px 2px;
+    }
+
+        li.addbutton a {
+            width: 60px;
+            height: 60px;
+            font-size: 50px;
+            border-radius: 100px;
+            font-family: 'Segoe UI', Tahoma, Helvetica, Sans-Serif;
+            text-align: center;
+            text-decoration: none;
+            background: #5558AF;
+            color: #FFFFFF;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            transition-duration: 0.5s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+            li.addbutton a:hover {
+                background-color: #9FA4FE !important;
+                color: #404045 !important;
+                transition-duration: 0.5s !important;
+            }
+
+    ul.workitem {
+        list-style-type: none;
+        margin: 0;
+        padding: 1%;
+    }
+
+    li.workitem {
+        width: 100%;
+        border: .0625rem solid #dadce0;
+        border-radius: 0.5rem;
+        letter-spacing: .01785714em;
+        font-family: 'Google Sans',Roboto,Arial,sans-serif;
+        font-size: 0.875rem;
+        font-weight: 500;
+        line-height: 1.25rem;
+        color: #3c4043;
+        background-color: white;
+        margin: 10px 0px 10px 0px
+    }
+
+        li.workitem a {
+            border: .0625rem solid #dadce0;
+            width: 100%;
+            border-radius: 0.5rem;
+            letter-spacing: .01785714em;
+            font-family: 'Google Sans',Roboto,Arial,sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.25rem;
+            color: #3c4043;
+            background-color: white;
+            display: flex;
+            justify-content: left;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            transition-duration: 0.5s;
+        }
+
+            li.workitem a:hover {
+                background-color: rgba(32,33,36,0.039);
+                transition-duration: 0.5s;
+            }
+
+    .workBody {
+        padding: 1%;
+    }
+
+
+    ul.matLink {
+        list-style-type: none;
+        margin: 0;
+        padding: 0px;
+    }
+
+    li.matLink {
+        border-radius: 1.0rem;
+        letter-spacing: .01785714em;
+        font-family: 'Google Sans',Roboto,Arial,sans-serif;
+        font-size: 0.875rem;
+        font-weight: 500;
+        line-height: 1.25rem;
+        color: #3c4043;
+        background-color: white;
+        display: flex;
+        justify-content: center
+    }
+
+        li.matLink a {
+            padding: 5px;
+            border-radius: 1.0rem;
+            border: none;
+            letter-spacing: .01785714em;
+            font-family: 'Google Sans',Roboto,Arial,sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.25rem;
+            color: #3c4043;
+            background-color: white;
+            display: flex;
+            justify-content: left;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            transition-duration: 0.5s;
+            text-align: center;
+        }
+
+
+
+            li.matLink a:hover {
+                background: #9FA4FE;
+                transition-duration: 0.5s;
+            }
+
+    label.uploadLabel {
+        background: #ccc;
+        border: 1px solid #3C4043;
+        margin: 5px;
+        cursor: pointer;
+        width: max-content;
+        padding: 5px;
+        border-radius: 1.0rem;
+        letter-spacing: .01785714em;
+        font-family: 'Google Sans',Roboto,Arial,sans-serif;
+        font-size: 0.875rem;
+        font-weight: 500;
+        line-height: 1.25rem;
+        color: #3c4043;
+        background-color: white;
+        display: flex;
+        justify-content: left;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        transition-duration: 0.5s;
+        text-align: center;
+        text-decoration: underline;
+        font-weight: bold;
+    }
+
+        label.uploadLabel:hover {
+            background: #9FA4FE;
+            border: 1px solid #9FA4FE;
+            transition-duration: 0.5s;
+        }
+
+    input[type=file].uploadButton, input[type=submit].uploadButton, input[type=button].uploadButton {
+        display: none;
+    }
+
+    div.changeStateButton a {
+        background: #ccc;
+        width: auto;
+        border: 1px solid #3C4043;
+        cursor: pointer;
+        padding: 5%;
+        border-radius: 2.0rem;
+        letter-spacing: .01785714em;
+        font-family: 'Google Sans',Roboto,Arial,sans-serif;
+        font-size: 0.875rem;
+        font-weight: 500;
+        line-height: 1.25rem;
+        color: #3c4043;
+        background-color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        transition-duration: 0.5s;
+        text-align: center;
+        text-decoration: underline;
+        font-weight: bold;
+    }
+
+        div.changeStateButton a:hover {
+            background: #9FA4FE;
+            border: 1px solid #9FA4FE;
+            transition-duration: 0.5s;
+        }
+
+
+    .createCourse {
+        width: 50%;
+        border: 3px solid #9FA4FE;
+        border-radius: 30px;
+        padding: 1%;
+        outline: none;
+        transition-duration: 0.5s;
+        font-family: 'Google Sans',Roboto,Arial,sans-serif;
+        font-size: 0.875rem;
+        font-weight: 500
+    }
+
+        .createCourse:focus {
+            border: 3px solid #5558AF;
+        }
+
+
+    div.editItem a {
+        padding: 5px;
+        border-radius: 1.0rem;
+        border: none;
+        letter-spacing: .01785714em;
+        font-family: 'Google Sans',Roboto,Arial,sans-serif;
+        font-size: 0.875rem;
+        font-weight: 500;
+        line-height: 1.25rem;
+        color: #3c4043;
+        background-color: white;
+        display: flex;
+        justify-content: left;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        transition-duration: 0.5s;
+        text-align: center;
+    }
+
+
+
+        div.editItem a:hover {
+            background: #9FA4FE;
+            transition-duration: 0.5s;
+        }
+</style>
+
+
+
+
+<script>
+    function getCookie(cname) {
+        var name = cname + "=";
+        var decodedCookie = decodeURIComponent(document.cookie);
+        var ca = decodedCookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return "";
+    }
+    function setCookie(cname, cvalue, exdays) {
+        var d = new Date();
+        d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+        var expires = "expires=" + d.toUTCString();
+        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+    }
+
+
+</script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script>
+    $.ajax({
+        url: "/Home/SetUserData",
+        type: "POST",
+        dataType: "text",
+        data: getCookie("authData")
+    });
+</script>
+
+
+
+
+
+
+<script>
+    var courseIds = [];
+</script>
+@{
+    string AddButtonId = "menuAddCourse";
+    string AddMenuItem = "AddCourse";
+    foreach (Course course in Model.courses)
+    {
+        <script>
+                courseIds.push(@course.Id);
+        </script>
+
+    }
+    if (Model.me.Permissions != null)
+    {
+        <script>
+        courseIds.push('@AddMenuItem');
+        </script>
+    }
+}
+<ul class="menubar">
+    @{
+        String menuItem;
+        foreach (Course course in Model.courses)
+        {
+            menuItem = "menu" + course.Id;
+            <li class="menubar">
+                <a id=@menuItem onclick="showCourseData(@course.Id)">@course.Name</a>
+            </li>
+        }
+        if (Model.me.Permissions != null)
+        {
+            <li class="addbutton">
+                <a id="@AddButtonId" onclick="showCourseData('@AddMenuItem')">
+                    <div style="width: 40px;height: 30px">+</div>
+                </a>
+            </li>
+        }
+    }
+</ul>
+
+<script>
+    function showCourseData(courseId) {
+        for (i = 0; i < courseIds.length; i++) {
+            document.getElementById(courseIds[i]).style.display = "none";
+            document.getElementById("menu" + courseIds[i]).style.color = "white";
+            document.getElementById("menu" + courseIds[i]).style.backgroundColor = "#5558AF";
+        }
+        document.getElementById(courseId).style.display = "block";
+        document.getElementById("menu" + courseId).style.color = "#404045";
+        document.getElementById("menu" + courseId).style.backgroundColor = "#9FA4FE";
+    }
+
+    function showCourseWorkData(clickedId, downArrowId) {
+
+        if (document.getElementById(downArrowId).innerHTML == "^") {
+            document.getElementById(clickedId).style.display = "none";
+            document.getElementById(downArrowId).innerHTML = "v"
+        }
+        else {
+            document.getElementById(clickedId).style.display = "block";
+            document.getElementById(downArrowId).innerHTML = "^"
+        }
+    }
+</script>
+
+
+@functions{
+    CourseWorkUser getCourseWork(String cid, String cwid)
+    {
+        foreach (CourseWorkUser cwu in Model.courseData[cid])
+        {
+            if (cwu.Id == cwid)
+            {
+                return cwu;
+            }
+        }
+        return null;
+    }
+
+    String getCompletionRatio(CourseWorkUser work)
+    {
+        IList<StudentSubmission> studentSubmissions = work.studentSubmissions;
+        IList<StudentSubmissionUser> newSubmissions = new List<StudentSubmissionUser>();
+        ClassroomOperations co = new ClassroomOperations();
+        foreach (StudentSubmission ss in studentSubmissions)
+        {
+            StudentSubmissionUser ssu = co.toStudentSubmissionUser(ss);
+            newSubmissions = co.compareSubmission(newSubmissions, ssu);
+        }
+        int total = 0;
+        int submitted = 0;
+        foreach(StudentSubmissionUser ss in newSubmissions)
+        {
+            if(ss.State == "TURNED_IN" || ss.State == "RETURNED")
+            {
+                submitted++;
+            }
+            total++;
+        }
+        return submitted.ToString() + "/" + total.ToString();
+    }
+}
+
+
+@functions {
+
+    public void getCourseUploads(CourseWorkUser cwu, String divId)
+    {
+        <script>
+            var div = document.createElement("div");
+        </script>
+        foreach (Attachment at in cwu.studentSubmissions[cwu.studentSubmissions.Count - 1].AssignmentSubmission.Attachments)
+        {
+
+            <script>
+                var a = document.createElement("a");
+                var linkText = document.createTextNode();
+                a.appendChild(linkText);
+            para.appendChild(node);
+            var element = document.getElementById(@divId);
+            element.appendChild(para);
+            </script>
+        }
+
+    }
+}
+
+<script>
+    function turnIn(link) {
+        alert("Opening browser window to turn in your work");
+        window.open(link)
+    }
+
+    function reclaim(link) {
+        alert("Opening browser window to reclaim your work");
+        window.open(link)
+    }
+
+</script>
+@functions{
+    public bool equalDates(DateTime t1, DateTime t2)
+    {
+        return t1.Day == t2.Day && t1.Month == t2.Month && t1.Year == t2.Year;
+    }
+    public List<String> getIds(IList<Teacher> teachers)
+    {
+        List<String> ids = new List<string>();
+        foreach (Teacher t in teachers)
+        {
+            ids.Add(t.UserId);
+        }
+        return ids;
+    }
+}
+
+
+@{ClassroomOperations cf = new ClassroomOperations();
+    if (Model.me.Permissions != null)
+    {
+        <div id="@AddMenuItem" style="display:none; width:100%; overflow:hidden auto">
+            @{ using (Html.BeginForm("CreateCourse", "HomeController", FormMethod.Post, new { style = "display:flex; justify-content:center; flex-direction:column", id = "CreateClassForm", enctype = "multipart/form-data" }))
+                {
+                    <div style="display:flex; justify-content:center; flex-direction:column">
+                        <label for="name">Course name</label>
+                        <input class="createCourse" type="text" id="name" name="Name" required>
+                        <label for="descHead">Description Heading</label>
+                        <textarea class="createCourse" id="descHead" name="DescriptionHeading" style="height:20%; resize: none;"></textarea>
+                        <label for="descFull">Full Description</label>
+                        <textarea class="createCourse" id="descFull" name="Description" style="height:30%; resize: none;"></textarea>
+                        <label class="uploadLabel">
+                            <input type="submit" class="uploadButton" />
+                            Create
+                        </label>
+                    </div>
+                }
+            }
+        </div>
+    }
+}
+
+<script>
+    function editWorkItem(formId, currentValue, itemName) {
+        var newValue = prompt("Edit " + itemName, currentValue);
+        if (newValue != currentValue && newValue != null) {
+            document.getElementById(formId + "NewValue").value = newValue;
+            document.getElementById(formId).submit();
+        }
+    }
+
+</script>
+
+@{
+    foreach (Course course in Model.courses)
+    {
+        if (getIds(Model.teachers[course.Id]).Contains(Model.me.Id))
+        {
+        <div id=@course.Id style="display:none; width:100%; overflow:hidden auto">
+            @{ String titleEditId = "titleEdit" + course.Id;
+                String titleEditNewValueId = titleEditId + "NewValue";}
+            <div style="display:flex; justify-content:center; width:100%" class="editItem">
+                <div style="padding:1%; text-align:center; text-decoration:underline; font-size:40px">@course.Name</div>
+                <a onclick="editWorkItem('@titleEditId', '@course.Name', 'title')" style="text-align:center; padding:1%">✎</a>
+                @{ using (Html.BeginForm("ChangeCourse", "HomeController", FormMethod.Post, new { style = "display:flex; justify-content:center; flex-direction:column", enctype = "multipart/form-data", id = titleEditId }))
+                    {
+                        <input type="hidden" value="name" name="updateField" />
+                        <input type="hidden" value="" name="newValue" id='@titleEditNewValueId' />
+                        <input type="hidden" value="@course.Id" name="courseId" />
+                    }
+                }
+            </div>
+            <div style="width:100%; display:flex; justify-content:left" class="editItem">
+                @{ String descEditId = "descEdit" + course.Id;
+                    String descEditNewValueId = descEditId + "NewValue";}
+                <div style="display:flex; justify-content:left; width:100%" class="editItem">
+                    <div style="padding:1%; text-align:left; font-size:20px">@course.Description</div>
+                    <a onclick="editWorkItem('@titleEditId', '@course.Description', 'description')" style="text-align:center; padding:1%">✎</a>
+
+                </div>
+            </div>
+            <ul class="workitem">
+                @{String workId;
+                    String downArrowId;
+                }
+                <li class="workitem">
+                    @{workId = course.Id + "AddWork";
+                        downArrowId = workId + "downArrow";
+                    }
+                    <a onclick="showCourseWorkData('@workId', '@downArrowId')" style="padding: 1% 0% 1% 0%;">
+                        <div style="width:95%; padding: 0% 2% 0% 2%; text-align:center; font-size: 40px;">+</div>
+                        <div id=@downArrowId style="padding: 0% 2% 0% 2%; width: 5%; text-align: right">v</div>
+                    </a>
+                    <div id=@workId style="display:none" class="workBody">
+                        @{ using (Html.BeginForm("CreateCourseWork", "HomeController", FormMethod.Post, new { style = "display:flex; justify-content:center; flex-direction:column", id = "CreateClassForm", enctype = "multipart/form-data" }))
+                            {
+                                String newWorkFilesBrowseButton = "NewWorkFileBrowse" + course.Id;
+                                String newWorkFilesToUploadText = "NewWorkFileDisplay" + course.Id;
+                                String newWorkTypes = "newWorkTypes" + course.Id;
+                                String titleId = "title" + course.Id;
+                                String descId = "desc" + course.Id;
+                                String stateCheckId = "stateCheck" + course.Id;
+                                String dueDateEnterId = "dueDateEnter" + course.Id;
+                                String dueTimeEnterId = "dueTimeEnter" + course.Id;
+                                String pointsId = "points" + course.Id;
+                                String scheduledDateId = "scheduledDate" + course.Id;
+                                String scheduledTimeId = "scheduledTime" + course.Id;
+                                String multipleChoiceOptionsId = "multipleChoiceOptions" + course.Id;
+                                String driveFolderId = "driveFolder" + course.Id;
+                                String dueDateTimeEnterIddiv = "dueDateTimeEnterdiv" + course.Id;
+                                String pointsIddiv = "pointsdiv" + course.Id;
+                                String scheduledDateTimeIddiv = "scheduledDateTimediv" + course.Id;
+                                String multipleChoiceOptionsIddiv = "multipleChoiceOptionsdiv" + course.Id;
+                                String driveFolderIddiv = "driveFolderdiv" + course.Id;
+                                String stateCheckIdValue = "stateCheckIdValue" + course.Id;
+                                DateTime today = DateTime.Today.AddDays(1);
+                                String todayString = $"{today.Year}-{GeneralOperations.addzeros(today.Month,2)}-{GeneralOperations.addzeros(today.Day,2)}";
+                                <div style="display:flex; justify-content:space-evenly">
+                                    <input type="hidden" value="@course.Id" name="courseId"  />
+                                    <div style="display:flex; flex-direction:column; width:20%; justify-content:space-between"> 
+                                        <div style="height:30%; flex-direction:column; display:flex">
+                                            <label for="@titleId">Work Title</label>
+                                            <input class="createCourse" type="text" id="@titleId" name="title" style="padding:4%; width:auto" required>
+                                        </div>
+                                        <div style="height:auto; flex-direction:column; display:flex">
+                                            <label for="@descId">Description</label>
+                                            <textarea class="createCourse" style="resize:none; padding:4%; width:auto; height:80%" id="@descId" name="Description"></textarea>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex; flex-direction: column; width:15%; align-items:center; padding:0% 1% 0% 1%">
+                                        <div style="text-align:center; text-decoration:underline; height:10%">Materials</div>
+                                        <label class="uploadLabel" style="height:10%">
+                                            <input type="file" name="Materials" class="uploadButton" id="@newWorkFilesBrowseButton" multiple />
+                                            Add...
+                                        </label>
+                                        <div style="display:flex; justify-content:center; height:80%">
+                                            <label id="@newWorkFilesToUploadText" style="word-break:break-word; font-size:10px"></label>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex; flex-direction:column; width:25%; justify-content:space-evenly">
+                                        <div style="display:flex">
+                                            <label for="@newWorkTypes" style="padding-right:2%">Type</label>
+                                            <select id="@newWorkTypes" name="WorkType">
+                                                <option value="ASSIGNMENT">Assignment</option>
+                                                <option value="SHORT_ANSWER_QUESTION">Short answer question</option>
+                                                <option value="MULTIPLE_CHOICE_QUESTION">Multiple Choice Question</option>
+                                                <option value="MATERIAL">Material</option>
+                                            </select>
+                                        </div>
+                                        <div style="display:flex">
+                                            <label for="@stateCheckId">Draft</label>
+                                            <input type="checkbox" id="@stateCheckId"/>
+                                            <input type="hidden" id="@stateCheckIdValue" value="PUBLISHED" name="State"/>
+                                        </div>
+                                        <div style="display:flex; align-items:baseline" id="@dueDateTimeEnterIddiv">
+                                                <label for="@dueDateEnterId" style="padding-right: 2%;">Due on</label>
+                                                <input type="date" min ="@todayString" class="createCourse" id="@dueDateEnterId" name="DateDue" style="width:auto"/>
+                                                <label for="@dueTimeEnterId" style="padding-right: 2%; padding-left:2%">at</label>
+                                                <input type="time" class="createCourse" id="@dueTimeEnterId" name="TimeDue" style="width:auto"/>
+                                        </div>
+                                        <div id="@pointsIddiv">
+                                            <label for="@pointsId">Points</label>
+                                            <input type="number" id="@pointsId" class="createCourse" name="points" placeholder="Ungraded" style="padding:2%" min="1"/>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex; flex-direction:column; width:20%; justify-content:space-between">
+                                        <div id="@scheduledDateTimeIddiv" style="display:none; height:100%">
+                                            <div style="display:flex; justify-content:space-evenly; flex-direction:column; height:100%">
+                                                <div>
+                                                    <label for="@scheduledDateId">Scheduled date</label>
+                                                    <input type="date" min="@todayString" id="@scheduledDateId" class="createCourse" name="scheduledDay" style="width:auto; padding:4%"/>
+                                                </div>
+                                                <div>
+                                                    <label for="@scheduledTimeId">Scheduled time</label>
+                                                    <input type="time" id="@scheduledTimeId" class="createCourse" name="scheduledTime" style="width:auto; padding:4%"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="width:20%">
+                                        <div id="@multipleChoiceOptionsIddiv" style="height:90%; display:none">
+                                            <label for="@multipleChoiceOptionsId">Multiple choice options, separate with 3 commas and no space</label>
+                                            <textarea id="@multipleChoiceOptionsId" name="multipleChoiceOptions" class="createCourse" style="width:90%; padding:4%; resize:none"></textarea>
+                                        </div>
+                                        <div id="@driveFolderIddiv" style="height:20%; display:block">
+                                            <label for="@driveFolderId">New drive folder name</label>
+                                            <input type="text" id="@driveFolderId" name="driveFolder" class="createCourse" style="width:90%; padding:4%; height:10%" required/>
+                                        </div>
+                                    </div>
+                                    <div style="padding:1%; margin:0">
+                                        <label class="uploadLabel">
+                                            <input type="submit" class="uploadButton" />
+                                            Create
+                                        </label>
+                                    </div>
+                                </div>
+                                <script>
+                                    function changeFilesName(evt) {
+                                        var files = evt.target.files;
+                                        var text = files[0].name
+                                                    for (i = 1; i < files.length; i++) {
+                                            text += "<br/>" + files[i].name;
+                                        }
+                                        document.getElementById("@newWorkFilesToUploadText").innerHTML = text;
+                                    }
+                                    function showItems(evt) {
+                                        value = document.getElementById('@newWorkTypes').value;
+                                        if (value == "MATERIAL") {
+                                            document.getElementById("@dueDateTimeEnterIddiv").style.display = "none";
+                                            document.getElementById("@pointsIddiv").style.display = "none";
+                                            document.getElementById("@multipleChoiceOptionsIddiv").style.display = "none";
+                                            document.getElementById("@driveFolderIddiv").style.display = "none";
+                                            document.getElementById("@multipleChoiceOptionsId").required = false;
+                                            document.getElementById("@driveFolderId").required = false;
+                                        }
+                                        else if (value == "MULTIPLE_CHOICE_QUESTION") {
+                                            document.getElementById("@dueDateTimeEnterIddiv").style.display = "block";
+                                            document.getElementById("@pointsIddiv").style.display = "block";
+                                            document.getElementById("@multipleChoiceOptionsIddiv").style.display = "block";
+                                            document.getElementById("@driveFolderIddiv").style.display = "none";
+                                            document.getElementById("@multipleChoiceOptionsId").required = true;
+                                            document.getElementById("@driveFolderId").required = false;
+                                        }
+                                        else if (value == "ASSIGNMENT") {
+                                            document.getElementById("@dueDateTimeEnterIddiv").style.display = "block";
+                                            document.getElementById("@pointsIddiv").style.display = "block";
+                                            document.getElementById("@multipleChoiceOptionsIddiv").style.display = "none";
+                                            document.getElementById("@driveFolderIddiv").style.display = "block";
+                                            document.getElementById("@multipleChoiceOptionsId").required = false;
+                                            document.getElementById("@driveFolderId").required = true;
+                                        }
+                                        else {
+                                            document.getElementById("@dueDateTimeEnterIddiv").style.display = "block";
+                                            document.getElementById("@pointsIddiv").style.display = "block";
+                                            document.getElementById("@multipleChoiceOptionsIddiv").style.display = "none";
+                                            document.getElementById("@driveFolderIddiv").style.display = "none";
+                                            document.getElementById("@multipleChoiceOptionsId").required = false;
+                                            document.getElementById("@driveFolderId").required = false;
+                                        }
+                                    }
+                                    function showDraftItems(evt) {
+                                        value = document.getElementById('@stateCheckIdValue').value
+                                        if (value == "PUBLISHED") {
+                                            document.getElementById('@stateCheckIdValue').value = "DRAFT";
+                                            document.getElementById("@scheduledDateTimeIddiv").style.display = "block";
+                                        }
+                                        else {
+                                            document.getElementById('@stateCheckIdValue').value = "PUBLISHED";
+                                            document.getElementById("@scheduledDateTimeIddiv").style.display = "none";
+                                        }
+                                    }
+                                    document.getElementById("@newWorkFilesBrowseButton").addEventListener('change', changeFilesName, false);
+                                    document.getElementById("@newWorkTypes").addEventListener('change', showItems, false);
+                                    document.getElementById("@stateCheckId").addEventListener('change', showDraftItems, false);
+                                </script>
+
+                            }
+                        }
+                    </div>
+                </li>
+                @{
+                    foreach (CourseWorkUser work in Model.courseData[course.Id])
+                    {
+                        workId = course.Id + work.Id;
+                        downArrowId = workId + "downArrow";
+                        <li class="workitem">
+                            <a onclick="showCourseWorkData('@workId', '@downArrowId')">
+                                <div style="display:flex; width:100%; align-items:center; padding: 1% 0% 1% 0%">
+
+                                    <div style="padding: 0% 2% 0% 2%; width: 30%; display:flex">
+                                        <div>@work.Title</div>
+                                    </div>
+
+                                    <div style="font-style:italic; color:#5558AF; padding: 0% 2% 0% 2%; width:35%">by @work.creator</div>
+                                    @{ if (work.MaxPoints != null)
+                                        {
+                                            <div style="color:; padding: 0% 2% 0% 2%; width:10%">Points: @work.MaxPoints</div>
+                                        }
+                                        else
+                                        {
+                                            <div style="color:#5558AF; padding: 0% 2% 0% 2%; width:10%"></div>
+                                        }
+                                    }
+                                    <div style="display:flex; width:20%; padding: 0% 2% 0% 2%; font-size:12px; text-align:right; justify-content:end">
+                                        @{ DateTime date;
+                                            String text;
+                                            if (work.DueDate == null)
+                                            {
+                                                date = DateTime.Parse(work.CreationTime.ToString());
+                                                text = "Created";
+                                            }
+                                            else
+                                            {
+                                                Date tempDate = work.DueDate;
+                                                int year = (int)tempDate.Year;
+                                                int month = (int)tempDate.Month;
+                                                int day = (int)tempDate.Day;
+                                                date = DateTime.ParseExact(GeneralOperations.addzeros(year, 4) + "-" + GeneralOperations.addzeros(month, 2) + "-" + GeneralOperations.addzeros(day, 2), "yyyy-MM-dd", null);
+                                                text = "Due";
+                                            }
+                                            if (equalDates(date, DateTime.Today))
+                                            {
+                                                <div style="align-self: center; color:#5558AF">@text today</div>
+                                            }
+                                            else if (date.CompareTo(DateTime.Today) < 0)
+                                            {
+
+
+                                                if (DateTime.Today.AddDays(-6).CompareTo(date) < 0)
+                                                {
+                                                    <div style="align-self: center; color:gray">@text last @date.DayOfWeek</div>
+                                                }
+                                                else
+                                                {
+                                                    <div style="align-self: center; color:gray">@text on @GeneralOperations.addzeros(date.Day, 2)/@GeneralOperations.addzeros(date.Month, 2)/@GeneralOperations.addzeros(date.Year, 4)</div>
+                                                }
+
+
+                                            }
+                                            else
+                                            {
+                                                if (DateTime.Today.AddDays(6).CompareTo(date) < 0)
+                                                {
+                                                    <div style="align-self: center; color:gray">@text last @date.DayOfWeek</div>
+                                                }
+                                                else
+                                                {
+                                                    <div style="align-self: center; color:gray">@text on @GeneralOperations.addzeros(date.Day, 2)/@GeneralOperations.addzeros(date.Month, 2)/@GeneralOperations.addzeros(date.Year, 4)</div>
+                                                }
+                                            }
+                                        }
+                                    </div>
+                                    <div id=@downArrowId style="padding: 0% 2% 0% 2%; width: 5%; text-align: right">v</div>
+                                </div>
+                            </a>
+                            <div id=@workId style="display:none" class="workBody">
+                                <div style="display:flex">
+                                    <div style="display:flex; width:40%; padding: 0% 2% 0% 2%;">
+                                        @{
+                                            if (work.Description == null)
+                                            {
+                                                <div style="font-style:italic">No description available</div>
+                                            }
+                                            else
+                                            {
+                                                <div>@work.Description</div>
+                                            }
+                                        }
+                                    </div>
+                                    <div style="width:20%; padding: 0% 2% 0% 2%;">
+                                        @{if (work.Materials != null)
+                                            {
+                                                <ul class="matLink">
+                                                    <li class="matLink">
+                                                        <div style="justify-content:center; display:flex; text-decoration:underline; font-weight:bold">Materials</div>
+                                                    </li>
+                                                    @{ foreach (Material mat in work.Materials)
+                                                        {
+                                                            <li class="matLink">
+                                                                @{ if (mat.Link != null)
+                                                                    {
+                                                                        <a href='@mat.Link.Url' style="justify-content:center; word-break:break-word">@mat.Link.Title</a>
+                                                                    }
+                                                                    else if (mat.DriveFile != null)
+                                                                    {
+                                                                        <a href='@mat.DriveFile.DriveFile.AlternateLink' target="_blank" style="justify-content:center; word-break:break-word">@mat.DriveFile.DriveFile.Title</a>
+                                                                    }
+                                                                }
+                                                            </li>
+                                                                    }
+
+                                                    }
+                                                </ul>
+                                                                    }
+
+                                        }
+                                    </div>
+                                    @{if (work.WorkType == "ASSIGNMENT" && work.studentSubmissions != null) {
+                                    <div style="width:20%; padding: 0% 2% 0% 2%;">@getCompletionRatio(work) Completed</div>
+                                    <div>
+                                        @{ using (Html.BeginForm("ViewSubmissions", "HomeController", FormMethod.Post, new { style = "display:flex; justify-content:center; flex-direction:column", enctype = "multipart/form-data", id = titleEditId }))
+                                            {
+                                                <input type="hidden" value="@course.Id" name="courseId" />
+                                                <input type="hidden" value="@work.Id" name="workId" />
+                                                <div style="padding:1%; margin:0">
+                                                    <label class="uploadLabel">
+                                                        <input type="submit" class="uploadButton" />
+                                                        View Submissions
+                                                    </label>
+                                                </div>
+
+                                            }
+                                        }
+                                    </div>
+                                                }
+                                            }
+                                </div>
+                                            
+                            </div>
+                        </li>
+                    }
+                }
+            </ul>
+        </div>
+        }
+        else
+        {
+        <div id=@course.Id style="display:none; width:100%; overflow:hidden auto">
+            <ul class="workitem">
+                @{
+                    String workId;
+                    String downArrowId;
+                    foreach (CourseWorkUser work in Model.courseData[course.Id])
+                    {
+                        workId = course.Id + work.Id;
+                        downArrowId = workId + "downArrow";
+                        <li class="workitem">
+                            <a onclick="showCourseWorkData('@workId', '@downArrowId')">
+                                <div style="display:flex; width:100%; align-items:center; padding: 1% 0% 1% 0%">
+                                    <div style="padding: 0% 2% 0% 2%; width: 30%">@work.Title</div>
+                                    <div style="font-style:italic; color:#5558AF; padding: 0% 2% 0% 2%; width:35%">by @work.creator</div>
+                                    @{ if (work.MaxPoints != null)
+                                        {
+                                            <div style="color:#5558AF; padding: 0% 2% 0% 2%; width:10%">Points: @work.MaxPoints</div>
+                                        }
+                                        else
+                                        {
+                                            <div style="color:#5558AF; padding: 0% 2% 0% 2%; width:10%"></div>
+                                        }
+                                    }
+                                    <div style="display:flex; width:20%; padding: 0% 2% 0% 2%; font-size:12px; text-align:right; justify-content:end">
+                                        @{ if (work.DueDate == null)
+                                            {
+                                                DateTime date = DateTime.Parse(work.CreationTime.ToString());
+                                                <div style="align-self: center; color:gray">Date Created: @GeneralOperations.addzeros(date.Day, 2)/@GeneralOperations.addzeros(date.Month, 2)/@GeneralOperations.addzeros(date.Year, 4)</div>
+                                            }
+                                            else
+                                            {
+                                                Date tempDate = work.DueDate;
+                                                int year = (int)tempDate.Year;
+                                                int month = (int)tempDate.Month;
+                                                int day = (int)tempDate.Day;
+                                                DateTime date = DateTime.ParseExact(GeneralOperations.addzeros(year, 4) + "-" + GeneralOperations.addzeros(month, 2) + "-" + GeneralOperations.addzeros(day, 2), "yyyy-MM-dd", null);
+
+                                                if (equalDates(date, DateTime.Today))
+                                                {
+                                                    <div style="align-self: center; color:#5558AF">Date Due: Today</div>
+                                                }
+                                                else if (date.CompareTo(DateTime.Today) < 0)
+                                                {
+                                                    if (work.studentSubmissions[work.studentSubmissions.Count - 1].State == "NEW" ||
+                                                        work.studentSubmissions[work.studentSubmissions.Count - 1].State == "CREATED")
+                                                    {
+                                                        if (DateTime.Today.AddDays(-6).CompareTo(date) < 0)
+                                                        {
+                                                            <div style="align-self: center; color:red">Overdue: Due last @date.DayOfWeek</div>
+                                                        }
+                                                        else
+                                                        {
+                                                            <div style="align-self: center; color:red">Overdue: Due on @GeneralOperations.addzeros(date.Day, 2)/@GeneralOperations.addzeros(date.Month, 2)/@GeneralOperations.addzeros(date.Year, 4)</div>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        DateTime submittedDate = DateTime.Parse(work.studentSubmissions[work.studentSubmissions.Count - 1].UpdateTime.ToString());
+                                                        if (DateTime.Today.AddDays(-6).CompareTo(date) < 0)
+                                                        {
+                                                            if (DateTime.Today.AddDays(-6).CompareTo(submittedDate) < 0)
+                                                            {
+                                                                <div style="align-self: center; color:gray">
+                                                                    Due last @date.DayOfWeek
+                                                                    <br />Submitted last @submittedDate.DayOfWeek
+                                                                </div>
+                                                            }
+                                                            else
+                                                            {
+                                                                <div style="align-self: center; color:gray">
+                                                                    Due last @date.DayOfWeek
+                                                                    <br />Submitted on @GeneralOperations.addzeros(submittedDate.Day, 2)/@GeneralOperations.addzeros(submittedDate.Month, 2)/@GeneralOperations.addzeros(submittedDate.Year, 4)
+                                                                </div>
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            if (DateTime.Today.AddDays(-6).CompareTo(submittedDate) < 0)
+                                                            {
+                                                                <div style="align-self: center; color:gray">
+                                                                    Due on @GeneralOperations.addzeros(date.Day, 2)/@GeneralOperations.addzeros(date.Month, 2)/@GeneralOperations.addzeros(date.Year, 4)
+                                                                    <br />Submitted last @submittedDate.DayOfWeek
+                                                                </div>
+                                                            }
+                                                            else
+                                                            {
+                                                                <div style="align-self: center; color:gray">
+                                                                    Due on @GeneralOperations.addzeros(date.Day, 2)/@GeneralOperations.addzeros(date.Month, 2)/@GeneralOperations.addzeros(date.Year, 4)
+                                                                    <br />Submitted on @GeneralOperations.addzeros(submittedDate.Day, 2)/@GeneralOperations.addzeros(submittedDate.Month, 2)/@GeneralOperations.addzeros(submittedDate.Year, 4)
+                                                                </div>
+                                                            }
+
+
+                                                        }
+                                                    }
+                                                }
+
+                                                else if (DateTime.Today.AddDays(6).CompareTo(date) > 0)
+                                                {
+                                                    <div style="align-self: center; color:gray">Date Due: @date.DayOfWeek</div>
+                                                }
+                                                else
+                                                {
+                                                    <div style="align-self: center; color:gray">Date Due: @GeneralOperations.addzeros(date.Day, 2)/@GeneralOperations.addzeros(date.Month, 2)/@GeneralOperations.addzeros(date.Year, 4)</div>
+                                                }
+                                            }
+                                        }
+                                    </div>
+                                    <div id=@downArrowId style="padding: 0% 2% 0% 2%; width: 5%; text-align: right">v</div>
+                                </div>
+                            </a>
+                            <div id=@workId style="display:none" class="workBody">
+                                <div style="display:flex">
+                                    <div style="display:flex; width:50%; padding: 0% 2% 0% 2%;">
+                                        @{
+                                            if (work.Description == null)
+                                            {
+                                                <div>See work attached</div>
+                                            }
+                                            else
+                                            {
+                                                <div>@work.Description</div>
+                                            }
+                                        }
+                                    </div>
+                                    <div style="width:20%; padding: 0% 2% 0% 2%;">
+                                        @{if (work.Materials != null)
+                                            {
+                                                <ul class="matLink">
+                                                    <li class="matLink">
+                                                        <div style="justify-content:center; display:flex; text-decoration:underline; font-weight:bold">Materials</div>
+                                                    </li>
+                                                    @{ foreach (Material mat in work.Materials)
+                                                        {
+                                                            <li class="matLink">
+                                                                @{ if (mat.Link != null)
+                                                                    {
+                                                                        <a href='@mat.Link.Url' style="justify-content:center; word-break:break-word">@mat.Link.Title</a>
+                                                                    }
+                                                                    else if (mat.DriveFile != null)
+                                                                    {
+                                                                        <a href='@mat.DriveFile.DriveFile.AlternateLink' target="_blank" style="justify-content:center; word-break:break-word">@mat.DriveFile.DriveFile.Title</a>
+                                                                    }
+                                                                }
+                                                            </li>
+                                                        }
+
+                                                    }
+                                                </ul>
+                                            }
+
+                                        }
+                                    </div>
+
+                                    @{ String getUploadsId = "GETUPLOADS" + course.Id + work.Id;
+                                        if (work.WorkType == "ASSIGNMENT")
+                                        {
+                                            <div id="@getUploadsId" style="width:15%; display:flex; flex-direction:column; padding: 0% 2% 0% 2%; justify-content:center; align-items: center">
+                                                <div>
+                                                    @{ if (work.studentSubmissions[work.studentSubmissions.Count - 1].AssignmentSubmission.Attachments == null)
+                                                        {
+                                                            <div style="text-align:center">No work uploaded</div>
+                                                        }
+                                                        else
+                                                        {
+                                                            <ul class="matLink">
+                                                                <li class="matLink">
+                                                                    <div style="justify-content:center; display:flex; text-decoration:underline; font-weight:bold">Your Work</div>
+                                                                </li>
+                                                                @if (work.studentSubmissions[work.studentSubmissions.Count - 1].AssignmentSubmission.Attachments != null)
+                                                                {
+                                                                    @foreach (Attachment at in work.studentSubmissions[work.studentSubmissions.Count - 1].AssignmentSubmission.Attachments)
+                                                                    {
+                                                                        <li class="matLink">
+                                                                            <a href="@at.DriveFile.AlternateLink" target="_blank" style="word-break:break-word">@at.DriveFile.Title</a>
+                                                                        </li>
+                                                                    }
+                                                                }
+                                                            </ul>
+                                                        }
+
+                                                    }
+                                                </div>
+                                                <div>
+                                                    @{String uploadFormId = "UPLOADFORM" + work.Id + course.Id;
+                                                        String fileToUploadId = "FILECURRENT" + work.Id + course.Id;
+                                                        String browseButton = "BROWSERBUTTON" + work.Id + course.Id;
+                                                        if (work.studentSubmissions[work.studentSubmissions.Count - 1].State != "TURNED_IN")
+                                                        {
+                                                            using (Html.BeginForm("Upload", "HomeController", FormMethod.Post, new { style = "display:flex; justify-content:center; flex-direction:column", enctype = "multipart/form-data", id = uploadFormId }))
+                                                            {
+                                                                <div style="display:flex; justify-content:center">
+                                                                    <label class="uploadLabel">
+                                                                        <input type="file" name="file" class="uploadButton" id="@browseButton" />
+                                                                        Browse...
+                                                                    </label>
+                                                                    <input type="hidden" value="@work.AlternateLink" name="link" />
+                                                                    <label class="uploadLabel">
+                                                                        <input type="submit" class="uploadButton" />
+                                                                        Upload
+                                                                    </label>
+                                                                </div>
+                                                                <div style="display:flex; justify-content:center">
+                                                                    <label id="@fileToUploadId">
+                                                                    </label>
+                                                                </div>
+                                                                <script>
+                                                            function changeFileName(evt) {
+                                                                document.getElementById("@fileToUploadId").innerHTML = "Selected file: " + evt.target.files[0].name;
+                                                            }
+                                                            document.getElementById("@browseButton").addEventListener('change', changeFileName, false);
+                                                                </script>
+                                                            }
+                                                        }
+                                                    }
+                                                </div>
+                                            </div>
+                                            <div style="width:10%; display:flex; flex-direction:column; padding: 0% 2% 0% 2%; text-align:center; justify-content:center">
+                                                @{ if (work.studentSubmissions[work.studentSubmissions.Count - 1].AssignedGrade == null)
+                                                    {
+                                                        if (work.studentSubmissions[work.studentSubmissions.Count - 1].State == "TURNED_IN")
+                                                        {
+                                                            <div style="height:50%; display:flex; align-items:center; justify-content:center">Grade Pending</div>
+                                                        }
+                                                        else
+                                                        {
+                                                            <div style="height:50%; display:flex; align-items:center; justify-content:center">Not Submitted</div>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <div style="height:50%; display:flex; align-items:center; justify-content:center">My Grade: @work.studentSubmissions[work.studentSubmissions.Count - 1].AssignedGrade</div>
+                                                    }
+                                                }
+                                                <div class="changeStateButton" style="height:50%; display:flex; align-items:center; justify-content:center">
+                                                    @{ if (work.studentSubmissions[work.studentSubmissions.Count - 1].State == "TURNED_IN")
+                                                        {
+                                                            <a onclick="reclaim('@work.AlternateLink')">Unsubmit</a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <a onclick="turnIn('@work.AlternateLink')">Turn in</a>
+                                                        }
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </li>
+                    }
+                }
+            </ul>
+        </div>
+        }
+    }
+
+}
+@{if (Model.displayResult != null)
+    {
+        <script>
+alert('@Model.displayResult.alertMessage');
+        </script>
+        if (Model.displayResult.redirectUrl != null)
+        {
+            <script>
+window.open('@Model.displayResult.redirectUrl');
+            </script>
+        }
+    }
+}
+

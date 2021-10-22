@@ -1,0 +1,442 @@
+﻿@using Google.Apis.Auth.OAuth2;
+@using Google.Apis.Classroom.v1;
+@using Google.Apis.Classroom.v1.Data;
+@using Google.Apis.Services;
+@using Google.Apis.Util.Store;
+@using System.Collections.Generic;
+@using System.IO;
+@using System.Threading;
+@using System.Configuration;
+@using iscl.gclassforteams.Web.Controllers
+@using Microsoft.AspNetCore.Http;
+@using System.Web;
+@using System;
+@using System.Linq;
+@using System.Threading.Tasks;
+@using Microsoft.AspNetCore.Mvc;
+@using Google.Apis.Auth.AspNetCore3;
+@using Microsoft.AspNetCore.Authorization;
+@using Google.Apis.Drive.v3;
+
+@model SubmissionData;
+    <style>
+
+        ul.menubar {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        li.menubar {
+            float: left;
+            background: white;
+            margin: 4px 2px;
+        }
+
+            li.menubar a {
+                display: inline-block;
+                padding: 20px;
+                border-radius: 12px;
+                font-family: 'Segoe UI', Tahoma, Helvetica, Sans-Serif;
+                text-align: center;
+                text-decoration: none;
+                background: #5558AF;
+                color: #FFFFFF;
+                cursor: pointer;
+                user-select: none;
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                transition-duration: 0.5s;
+            }
+
+                li.menubar a:hover {
+                    background-color: #9FA4FE !important;
+                    color: #404045 !important;
+                    transition-duration: 0.5s !important;
+                }
+
+        li.addbutton {
+            float: left;
+            background: white;
+            margin: 4px 2px;
+        }
+
+            li.addbutton a {
+                width: 60px;
+                height: 60px;
+                font-size: 50px;
+                border-radius: 100px;
+                font-family: 'Segoe UI', Tahoma, Helvetica, Sans-Serif;
+                text-align: center;
+                text-decoration: none;
+                background: #5558AF;
+                color: #FFFFFF;
+                cursor: pointer;
+                user-select: none;
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                transition-duration: 0.5s;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+                li.addbutton a:hover {
+                    background-color: #9FA4FE !important;
+                    color: #404045 !important;
+                    transition-duration: 0.5s !important;
+                }
+
+        ul.workitem {
+            list-style-type: none;
+            margin: 0;
+            padding: 1%;
+        }
+
+        li.workitem {
+            width: 100%;
+            border: .0625rem solid #dadce0;
+            border-radius: 0.5rem;
+            letter-spacing: .01785714em;
+            font-family: 'Google Sans',Roboto,Arial,sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.25rem;
+            color: #3c4043;
+            background-color: white;
+            margin: 10px 0px 10px 0px
+        }
+
+            li.workitem a {
+                border: .0625rem solid #dadce0;
+                width: 100%;
+                border-radius: 0.5rem;
+                letter-spacing: .01785714em;
+                font-family: 'Google Sans',Roboto,Arial,sans-serif;
+                font-size: 0.875rem;
+                font-weight: 500;
+                line-height: 1.25rem;
+                color: #3c4043;
+                background-color: white;
+                display: flex;
+                justify-content: left;
+                align-items: center;
+                cursor: pointer;
+                user-select: none;
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                transition-duration: 0.5s;
+            }
+
+                li.workitem a:hover {
+                    background-color: rgba(32,33,36,0.039);
+                    transition-duration: 0.5s;
+                }
+
+        .workBody {
+            padding: 1%;
+        }
+
+
+        ul.matLink {
+            list-style-type: none;
+            margin: 0;
+            padding: 0px;
+        }
+
+        li.matLink {
+            border-radius: 1.0rem;
+            letter-spacing: .01785714em;
+            font-family: 'Google Sans',Roboto,Arial,sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.25rem;
+            color: #3c4043;
+            background-color: white;
+            display: flex;
+            justify-content: center
+        }
+
+            li.matLink a {
+                padding: 5px;
+                border-radius: 1.0rem;
+                border: none;
+                letter-spacing: .01785714em;
+                font-family: 'Google Sans',Roboto,Arial,sans-serif;
+                font-size: 0.875rem;
+                font-weight: 500;
+                line-height: 1.25rem;
+                color: #3c4043;
+                background-color: white;
+                display: flex;
+                justify-content: left;
+                align-items: center;
+                cursor: pointer;
+                user-select: none;
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                transition-duration: 0.5s;
+                text-align: center;
+            }
+
+
+
+                li.matLink a:hover {
+                    background: #9FA4FE;
+                    transition-duration: 0.5s;
+                }
+
+        label.uploadLabel {
+            background: #ccc;
+            border: 1px solid #3C4043;
+            margin: 5px;
+            cursor: pointer;
+            width: max-content;
+            padding: 5px;
+            border-radius: 1.0rem;
+            letter-spacing: .01785714em;
+            font-family: 'Google Sans',Roboto,Arial,sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.25rem;
+            color: #3c4043;
+            background-color: white;
+            display: flex;
+            justify-content: left;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            transition-duration: 0.5s;
+            text-align: center;
+            text-decoration: underline;
+            font-weight: bold;
+        }
+
+            label.uploadLabel:hover {
+                background: #9FA4FE;
+                border: 1px solid #9FA4FE;
+                transition-duration: 0.5s;
+            }
+
+        input[type=file].uploadButton, input[type=submit].uploadButton, input[type=button].uploadButton {
+            display: none;
+        }
+
+        div.changeStateButton a {
+            background: #ccc;
+            width: auto;
+            border: 1px solid #3C4043;
+            cursor: pointer;
+            padding: 5%;
+            border-radius: 2.0rem;
+            letter-spacing: .01785714em;
+            font-family: 'Google Sans',Roboto,Arial,sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.25rem;
+            color: #3c4043;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            transition-duration: 0.5s;
+            text-align: center;
+            text-decoration: underline;
+            font-weight: bold;
+        }
+
+            div.changeStateButton a:hover {
+                background: #9FA4FE;
+                border: 1px solid #9FA4FE;
+                transition-duration: 0.5s;
+            }
+
+
+        .createCourse {
+            width: 50%;
+            border: 3px solid #9FA4FE;
+            border-radius: 30px;
+            padding: 1%;
+            outline: none;
+            transition-duration: 0.5s;
+            font-family: 'Google Sans',Roboto,Arial,sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500
+        }
+
+            .createCourse:focus {
+                border: 3px solid #5558AF;
+            }
+
+
+        div.editItem a {
+            padding: 5px;
+            border-radius: 1.0rem;
+            border: none;
+            letter-spacing: .01785714em;
+            font-family: 'Google Sans',Roboto,Arial,sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.25rem;
+            color: #3c4043;
+            background-color: white;
+            display: flex;
+            justify-content: left;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            transition-duration: 0.5s;
+            text-align: center;
+        }
+
+
+
+            div.editItem a:hover {
+                background: #9FA4FE;
+                transition-duration: 0.5s;
+            }
+    </style>
+
+
+@{ Dictionary<String, String> stateMap = new Dictionary<String, String>();
+    stateMap["NEW"] = "Incomplete";
+    stateMap["CREATED"] = "Incomplete";
+    stateMap["TURNED_IN"] = "Complete";
+    stateMap["RETURNED"] = "Returned to student";
+    stateMap["RECLAIMED_BY_STUDENT"] = "Withdrawn by student";
+    };
+
+
+
+<script>
+    function showSubmissionData(clickedId, downArrowId) {
+
+        if (document.getElementById(downArrowId).innerHTML == "^") {
+            document.getElementById(clickedId).style.display = "none";
+            document.getElementById(downArrowId).innerHTML = "v"
+        }
+        else {
+            document.getElementById(clickedId).style.display = "block";
+            document.getElementById(downArrowId).innerHTML = "^"
+        }
+    }
+</script>
+<div>
+    <div>Submission Viewer for @Model.courseWork.Title in course @Model.course.Name</div>
+    <ul class="workitem">
+        @{ 
+            String downArrowId;
+            String userId;
+            foreach (StudentSubmissionUser ss in Model.submissions)
+            {
+                userId = ss.UserId;
+                downArrowId = userId + "downArrow";
+                        <li class="workitem">
+                            <a onclick="showCourseWorkData('@userId', '@downArrowId')">
+                                @{ 
+                                    String colour = "";
+                                    String text = "";
+                                    if (ss.State == "NEW" || ss.State == "CREATED" || ss.State == "RECLAIMED_BY_STUDENT")
+                                    {
+                                        if((bool)ss.Late)
+                                        {
+                                            colour = "red";
+                                            text = "Late";
+                                        }
+                                        else
+                                        {
+                                            colour = "orange";
+                                        }
+                                    }
+                                    else if(ss.State == "TURNED_IN")
+                                    {
+                                        colour = "green";
+                                    }
+                                    else
+                                    {
+                                        colour = "#5558AF";
+                                        if ((bool)ss.Late)
+                                        {
+                                            text = "Submitted Late";
+                                        }
+                                    }
+                                    }
+                                <div style="display:flex; width:100%; align-items:center; padding: 1% 0% 1% 0%; color : @colour">
+                                    <div style="padding: 0% 2% 0% 2%; width: 20%">@ss.name</div>
+                                    <div style="padding: 0% 2% 0% 2%; width: 15%">@stateMap[ss.State]</div>
+                                    <div style="padding: 0% 2% 0% 2%; width: 20%">Due on @Model.courseWork.DueDate.ToString()</div>
+                                    <div style="padding: 0% 2% 0% 2%; width: 20%">Submitted on @ss.UpdateTime.ToString()</div>
+                                    <div style="padding: 0% 2% 0% 2%; width: 20%">@text</div>
+                                    <div id=@downArrowId style="padding: 0% 2% 0% 2%; width: 5%; text-align: right">v</div>
+                                </div>
+                            </a>
+                            <div id=@userId style="display:none" class="workBody">
+                                <div style="display:flex">
+                                    @{ String getUploadsId = "GETUPLOADS" + Model.course.Id + Model.courseWork.Id;
+                                        if (ss.CourseWorkType == "ASSIGNMENT")
+                                        {
+                                            <div id="@getUploadsId" style="width:15%; display:flex; flex-direction:column; padding: 0% 2% 0% 2%; justify-content:center; align-items: center">
+                                                <div>
+                                                    @{ if (ss.AssignmentSubmission.Attachments == null)
+                                                        {
+                                                            <div style="text-align:center">No work uploaded</div>
+                                                        }
+                                                        else
+                                                        {
+                                                            <ul class="matLink">
+                                                                <li class="matLink">
+                                                                    <div style="justify-content:center; display:flex; text-decoration:underline; font-weight:bold">Your Work</div>
+                                                                </li>
+                                                                @if (ss.AssignmentSubmission.Attachments != null)
+                                                                {
+                                                                    @foreach (Attachment at in ss.AssignmentSubmission.Attachments)
+                                                                    {
+                                                                        <li class="matLink">
+                                                                            <a href="@at.DriveFile.AlternateLink" target="_blank" style="word-break:break-word">@at.DriveFile.Title</a>
+                                                                        </li>
+                                                                    }
+                                                                }
+                                                            </ul>
+                                                        }
+
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </li>
+                    }
+                }
+            </ul>
+                </div>
+            }
+        }
+    </ul>
+
+
+
+</div>
