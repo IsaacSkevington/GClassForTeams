@@ -467,10 +467,7 @@
         }
         return submitted.ToString() + "/" + total.ToString();
     }
-}
 
-
-@functions {
 
     public void getCourseUploads(CourseWorkUser cwu, String divId)
     {
@@ -491,21 +488,6 @@
         }
 
     }
-}
-
-<script>
-    function turnIn(link) {
-        alert("Opening browser window to turn in your work");
-        window.open(link)
-    }
-
-    function reclaim(link) {
-        alert("Opening browser window to reclaim your work");
-        window.open(link)
-    }
-
-</script>
-@functions{
     public bool equalDates(DateTime t1, DateTime t2)
     {
         return t1.Day == t2.Day && t1.Month == t2.Month && t1.Year == t2.Year;
@@ -520,6 +502,21 @@
         return ids;
     }
 }
+
+<script>
+    function turnIn(link) {
+        alert("Opening browser window to turn in your work");
+        window.open(link)
+    }
+
+    function reclaim(link) {
+        alert("Opening browser window to reclaim your work");
+        window.open(link)
+    }
+
+</script>
+
+
 
 
 @{ClassroomOperations cf = new ClassroomOperations();
